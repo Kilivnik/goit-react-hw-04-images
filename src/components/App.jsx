@@ -38,7 +38,7 @@ export default function App() {
           setError(error);
           return;
         }
-
+        setHits(prev => [...prev, ...totalHits.hits]);
         setTotalHits(...totalHits);
         setTotalHits(totalHits.length >= 12);
       } catch (error) {
@@ -48,7 +48,7 @@ export default function App() {
       }
     };
     getImages();
-  }, [searchQuery, page, error, hits]);
+  }, [searchQuery, page]);
 
   const handleSubmit = searchQuery => {
     setSearchQuery(searchQuery);
