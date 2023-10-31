@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-// import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { useState, useEffect } from 'react';
 import s from '../components/App.module.css';
 
 import Searchbar from '../../src/components/Searchbar/Searchbar';
@@ -10,86 +9,78 @@ import Loader from './Loader/Loader';
 
 import { fetchImages } from '../services/api';
 
-class App extends Component {
-  state = {
-    searchQuery: '',
-    page: 1,
-    hits: [],
-    totalHits: 0,
-    isLoading: false,
-    error: null,
-    modalId: '',
-    isShowModal: false,
-    largeImageURL: '',
-    imageRequest: '',
-  };
+export default function App() {
+  const [hits, setHits] = useState([]);
+  const [totalHits, setTotalHits] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isShowModal, setIsShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState(null);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [imageRequest, setImageRequest] = useState('');
 
-  handleSubmit = searchQuery => {
-    this.setState({ searchQuery, hits: [], page: 1 });
-  };
+  useEffect(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      left: 0,
+      behavior: 'smooth',
+    });
+  }, [hits]);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page, searchQuery, hits } = this.state;
+  useEffect(() => {
+    if (searchQuery.trim() === '') return;
+    const getImages = async () => {
+      try {
+        setIsLoading(true);
+        const totalHits = await fetchImages(searchQuery, page);
+        if (totalHits.length === 0) {
+          setError(error);
+          return;
+        }
 
-    if (searchQuery !== prevState.searchQuery || page !== prevState.page) {
-      this.getImages(searchQuery, page);
-
-      if (prevState.hits.length !== hits.length) {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          left: 0,
-          behavior: 'smooth',
-        });
+        setTotalHits(...totalHits);
+        setTotalHits(totalHits.length >= 12);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }
+    };
+    getImages();
+  }, [searchQuery, page, error, hits]);
 
-  getImages = async (searchQuery, page) => {
-    this.setState({ isLoading: true });
-    try {
-      const data = await fetchImages(searchQuery, page);
-      this.setState(prev => ({
-        hits: [...prev.hits, ...data.hits],
-        totalHits: data.totalHits,
-      }));
-    } catch (error) {
-    } finally {
-      this.setState({ isLoading: false });
-    }
+  const handleSubmit = searchQuery => {
+    setSearchQuery(searchQuery);
+    setPage(1);
+    setHits([]);
+    setImageRequest(imageRequest);
   };
 
-  toggleModal = largeImageURL => {
-    this.setState(prevState => ({
-      isShowModal: !prevState.isShowModal,
-      largeImageURL,
-    }));
+  const toggleModal = largeImageURL => {
+    setIsShowModal(!isShowModal);
+    setLargeImageURL(largeImageURL);
   };
 
-  changePage = () => {
-    this.setState(() => ({ page: this.state.page + 1 }));
-  };
-
-  render() {
-    const { hits, isLoading, totalHits, isShowModal } = this.state;
-
-    return (
-      <div className={s.App}>
-        <Searchbar onSubmit={this.handleSubmit} />
-        <ImageGallery hits={hits} openModal={this.toggleModal} />
-        {this.state.isLoading && <Loader />}
-        {Boolean(hits.length) && !isLoading && hits.length !== totalHits && (
-          <Button changePage={this.changePage} />
-        )}
-        {isShowModal && (
-          <Modal
-            largeImageURL={this.state.largeImageURL}
-            alt={this.state.imageRequest}
-            closeModal={this.toggleModal}
-          />
-        )}
-      </div>
-    );
-  }
+  return (
+    <div className={s.App}>
+      <Searchbar onSubmit={handleSubmit} />
+      <ImageGallery hits={hits} openModal={toggleModal} />
+      {isLoading && <Loader />}
+      {Boolean(hits.length) && !isLoading && hits.length !== totalHits && (
+        <Button
+          changePage={() => {
+            setPage(page + 1);
+          }}
+        />
+      )}
+      {isShowModal && (
+        <Modal
+          largeImageURL={largeImageURL}
+          alt={imageRequest}
+          closeModal={toggleModal}
+        />
+      )}
+    </div>
+  );
 }
-
-export default App;
