@@ -35,7 +35,7 @@ export default function App() {
         setIsLoading(true);
         const totalHits = await fetchImages(searchQuery, page);
         if (totalHits.length === 0) {
-          setError(error);
+          setError(error.message('Sorry, no images found for the query'));
           return;
         }
         setHits(prev => [...prev, ...totalHits.hits]);
@@ -48,7 +48,7 @@ export default function App() {
       }
     };
     getImages();
-  }, [searchQuery, page]);
+  }, [searchQuery, page, error]);
 
   const handleSubmit = searchQuery => {
     setSearchQuery(searchQuery);
