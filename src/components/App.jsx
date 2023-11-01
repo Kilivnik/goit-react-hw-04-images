@@ -38,6 +38,7 @@ export default function App() {
           setError(error.message('Sorry, no images found for the query'));
           return;
         }
+
         setHits(prev => [...prev, ...totalHits.hits]);
         setTotalHits(...totalHits);
         setTotalHits(totalHits.length >= 12);
@@ -70,7 +71,7 @@ export default function App() {
       {Boolean(hits.length) && !isLoading && hits.length !== totalHits && (
         <Button
           changePage={() => {
-            setPage(page + 1);
+            setPage(prevState => prevState + 1);
           }}
         />
       )}
