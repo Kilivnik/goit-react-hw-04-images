@@ -40,8 +40,7 @@ export default function App() {
         }
 
         setHits(prev => [...prev, ...totalHits.hits]);
-        setTotalHits(...totalHits);
-        setTotalHits(totalHits.length >= 12);
+        setTotalHits(totalHits.totalHits);
       } catch (error) {
         setError(error.message);
       } finally {
@@ -68,7 +67,7 @@ export default function App() {
       <Searchbar onSubmit={handleSubmit} />
       <ImageGallery hits={hits} openModal={toggleModal} />
       {isLoading && <Loader />}
-      {Boolean(hits.length) && !isLoading && hits.length !== totalHits && (
+      {totalHits > hits.length && (
         <Button
           changePage={() => {
             setPage(prevState => prevState + 1);
